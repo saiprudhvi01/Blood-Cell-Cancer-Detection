@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blood Cancer Detection - Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="register-page">
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>🩸 Join Blood Cancer Detection</h1>
+                <p class="subtitle">Create your account for advanced blood cell analysis</p>
+            </div>
+            
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    {% for category, message in messages %}
+                        <div class="auth-alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+            {% endwith %}
+            
+            <form method="POST" class="auth-form">
+                {{ form.hidden_tag() }}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.username.label }}
+                        {{ form.username(class="form-control", placeholder="Choose username") }}
+                        {% if form.username.errors %}
+                            {% for error in form.username.errors %}
+                                <span class="error-text">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.email.label }}
+                        {{ form.email(class="form-control", placeholder="Enter email") }}
+                        {% if form.email.errors %}
+                            {% for error in form.email.errors %}
+                                <span class="error-text">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.password.label }}
+                        {{ form.password(class="form-control", placeholder="Create password") }}
+                        {% if form.password.errors %}
+                            {% for error in form.password.errors %}
+                                <span class="error-text">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.confirm_password.label }}
+                        {{ form.confirm_password(class="form-control", placeholder="Confirm password") }}
+                        {% if form.confirm_password.errors %}
+                            {% for error in form.confirm_password.errors %}
+                                <span class="error-text">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        {{ form.full_name.label }}
+                        {{ form.full_name(class="form-control", placeholder="Full name") }}
+                        {% if form.full_name.errors %}
+                            {% for error in form.full_name.errors %}
+                                <span class="error-text">{{ error }}</span>
+                            {% endfor %}
+                        {% endif %}
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.phone.label }}
+                        {{ form.phone(class="form-control", placeholder="Phone number") }}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    {{ form.role.label }}
+                    {{ form.role(class="form-control") }}
+                    {% if form.role.errors %}
+                        {% for error in form.role.errors %}
+                            <span class="error-text">{{ error }}</span>
+                        {% endfor %}
+                    {% endif %}
+                </div>
+                
+                {{ form.submit(class="btn btn-primary") }}
+            </form>
+            
+            <div class="auth-links">
+                <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

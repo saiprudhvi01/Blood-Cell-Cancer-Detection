@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Blood Cancer Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">🩸 Blood Cancer Detection</a>
+            <ul class="navbar-nav">
+                <li><a href="{{ url_for('admin_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Admin Dashboard</h1>
+            <p>System Administration & User Management</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Statistics -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <h3>Total Patients</h3>
+                <div class="stat-number">{{ patients|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Doctors</h3>
+                <div class="stat-number">{{ doctors|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Total Admins</h3>
+                <div class="stat-number">{{ admins|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>All Users</h3>
+                <div class="stat-number">{{ all_users|length }}</div>
+            </div>
+        </div>
+
+        <!-- Patients -->
+        <div class="card">
+            <div class="card-header">
+                <h3>👥 Registered Patients</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Joined</th>
+                            <th>Predictions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for patient in patients %}
+                        <tr>
+                            <td>{{ patient.id }}</td>
+                            <td>{{ patient.full_name }}</td>
+                            <td>{{ patient.username }}</td>
+                            <td>{{ patient.email }}</td>
+                            <td>{{ patient.phone or 'N/A' }}</td>
+                            <td>{{ patient.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ patient.predictions|length }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Doctors -->
+        <div class="card">
+            <div class="card-header">
+                <h3>👨‍⚕️ Registered Doctors</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Joined</th>
+                            <th>Messages Sent</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for doctor in doctors %}
+                        <tr>
+                            <td>{{ doctor.id }}</td>
+                            <td>{{ doctor.full_name }}</td>
+                            <td>{{ doctor.username }}</td>
+                            <td>{{ doctor.email }}</td>
+                            <td>{{ doctor.phone or 'N/A' }}</td>
+                            <td>{{ doctor.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>{{ doctor.sent_messages|length }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Admins -->
+        <div class="card">
+            <div class="card-header">
+                <h3>👑 Registered Admins</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Full Name</th>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Joined</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admin in admins %}
+                        <tr>
+                            <td>{{ admin.id }}</td>
+                            <td>{{ admin.full_name }}</td>
+                            <td>{{ admin.username }}</td>
+                            <td>{{ admin.email }}</td>
+                            <td>{{ admin.phone or 'N/A' }}</td>
+                            <td>{{ admin.created_at.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Dashboard - Blood Cancer Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">🩸 Blood Cancer Detection</a>
+            <ul class="navbar-nav">
+                <li><a href="{{ url_for('patient_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Welcome, {{ current_user.full_name }}!</h1>
+            <p>Your personal blood cell analysis dashboard</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Prediction Interface -->
+        <div class="card">
+            <div class="card-header">
+                <h3>🩸 Blood Cell Analysis</h3>
+            </div>
+            <div class="card-body">
+                <div class="upload-area" id="uploadArea">
+                    <div class="upload-icon">📤</div>
+                    <div class="upload-text">Click to upload or drag & drop</div>
+                    <div class="upload-hint">Supports: JPG, PNG, GIF (Max 10MB)</div>
+                    <input type="file" id="fileInput" accept="image/*" style="display: none;">
+                </div>
+
+                <div id="previewContainer" style="display: none;">
+                    <img id="previewImage" style="max-width: 100%; max-height: 300px; border-radius: 8px; margin: 20px 0;">
+                </div>
+
+                <button class="btn btn-primary" id="predictBtn" disabled style="width: 100%; margin-bottom: 20px;">Analyze Image</button>
+
+                <div id="loading" style="display: none; text-align: center; margin: 20px 0;">
+                    <p>Analyzing image...</p>
+                </div>
+
+                <div id="error" style="display: none;"></div>
+
+                <div id="resultContainer" style="display: none;">
+                    <div class="prediction-result" id="predictionResult">
+                        <h3 id="resultTitle"></h3>
+                        <div id="resultStatus"></div>
+                        <div class="stage" id="resultStage"></div>
+                        <div class="severity" id="resultSeverity"></div>
+                        <div class="description" id="resultDescription"></div>
+                        <div class="confidence" id="resultConfidence"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Predictions -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📊 Recent Predictions</h3>
+            </div>
+            <div class="card-body">
+                {% if predictions %}
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Prediction</th>
+                                <th>Stage</th>
+                                <th>Confidence</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for prediction in predictions %}
+                            <tr>
+                                <td>{{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                                <td>{{ prediction.prediction }}</td>
+                                <td>{{ prediction.stage or 'N/A' }}</td>
+                                <td>{{ "%.1f"|format(prediction.confidence * 100) }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No predictions yet. Upload an image to get started!</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div class="card">
+            <div class="card-header">
+                <h3>💬 Messages from Doctors</h3>
+            </div>
+            <div class="card-body">
+                {% if messages %}
+                    {% for message in messages %}
+                    <div class="message-card {% if not message.read %}unread{% endif %}">
+                        <div class="message-subject">{{ message.subject }}</div>
+                        <div class="message-content">{{ message.content }}</div>
+                        <div class="message-date">From: {{ message.sender.full_name }} | {{ message.sent_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <p>No messages from doctors yet.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const previewContainer = document.getElementById('previewContainer');
+        const previewImage = document.getElementById('previewImage');
+        const predictBtn = document.getElementById('predictBtn');
+        const loading = document.getElementById('loading');
+        const error = document.getElementById('error');
+        const resultContainer = document.getElementById('resultContainer');
+        const predictionResult = document.getElementById('predictionResult');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultStatus = document.getElementById('resultStatus');
+        const resultStage = document.getElementById('resultStage');
+        const resultSeverity = document.getElementById('resultSeverity');
+        const resultDescription = document.getElementById('resultDescription');
+        const resultConfidence = document.getElementById('resultConfidence');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+
+        fileInput.addEventListener('change', handleFileSelect);
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#dc3545';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#dee2e6';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#dee2e6';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        predictBtn.addEventListener('click', makePrediction);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (file) {
+                handleFile(file);
+            }
+        }
+
+        function handleFile(file) {
+            if (!file.type.startsWith('image/')) {
+                showError('Please upload an image file');
+                return;
+            }
+
+            if (file.size > 10 * 1024 * 1024) {
+                showError('File size must be less than 10MB');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                previewImage.src = e.target.result;
+                previewContainer.style.display = 'block';
+                predictBtn.disabled = false;
+                hideError();
+                hideResult();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function makePrediction() {
+            const file = fileInput.files[0];
+            if (!file) return;
+
+            loading.style.display = 'block';
+            predictBtn.disabled = true;
+            hideError();
+            hideResult();
+
+            const formData = new FormData();
+            formData.append('image', file);
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    showResult(data);
+                } else {
+                    showError(data.error || 'Prediction failed');
+                }
+            } catch (err) {
+                showError('Network error: ' + err.message);
+            } finally {
+                loading.style.display = 'none';
+                predictBtn.disabled = false;
+            }
+        }
+
+        function showResult(data) {
+            resultTitle.textContent = data.prediction;
+            resultStatus.textContent = `Status: ${data.status}`;
+            resultStage.textContent = `Stage: ${data.stage}`;
+            resultSeverity.textContent = `Severity: ${data.severity}`;
+            resultDescription.textContent = data.description;
+            resultConfidence.textContent = `Confidence: ${data.confidence}`;
+
+            predictionResult.className = 'prediction-result';
+            if (data.status === 'YES') {
+                predictionResult.classList.add('disease-present');
+            } else {
+                predictionResult.classList.add('disease-absent');
+            }
+
+            resultContainer.style.display = 'block';
+        }
+
+        function hideResult() {
+            resultContainer.style.display = 'none';
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.className = 'alert alert-error';
+            error.style.display = 'block';
+        }
+
+        function hideError() {
+            error.style.display = 'none';
+        }
+    </script>
+</body>
+</html>

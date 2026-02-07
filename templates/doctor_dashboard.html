@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doctor Dashboard - Blood Cancer Detection</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a class="navbar-brand" href="#">🩸 Blood Cancer Detection</a>
+            <ul class="navbar-nav">
+                <li><a href="{{ url_for('doctor_dashboard') }}">Dashboard</a></li>
+                <li><a href="{{ url_for('logout') }}">Logout</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="dashboard-header">
+            <h1>Dr. {{ current_user.full_name }}</h1>
+            <p>Medical Professional Dashboard</p>
+        </div>
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ 'success' if category == 'success' else 'error' }}">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <!-- Statistics -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <h3>Total Patients</h3>
+                <div class="stat-number">{{ patient_data|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Recent Predictions</h3>
+                <div class="stat-number">{{ recent_predictions|length }}</div>
+            </div>
+            <div class="stat-card">
+                <h3>Messages Sent</h3>
+                <div class="stat-number">{{ current_user.sent_messages|length }}</div>
+            </div>
+        </div>
+
+        <!-- Send Message -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📧 Send Message to Patient</h3>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('send_message') }}">
+                    {{ form.hidden_tag() }}
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            {{ form.recipient_id.label }}
+                            {{ form.recipient_id(class="form-control") }}
+                        </div>
+                        
+                        <div class="form-group">
+                            {{ form.subject.label }}
+                            {{ form.subject(class="form-control") }}
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        {{ form.content.label }}
+                        {{ form.content(class="form-control", rows="4") }}
+                    </div>
+                    
+                    {{ form.submit(class="btn btn-primary") }}
+                </form>
+            </div>
+        </div>
+
+        <!-- Patient List -->
+        <div class="card">
+            <div class="card-header">
+                <h3>👥 Patient Overview</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th>Latest Prediction</th>
+                            <th>Status</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for data in patient_data %}
+                        <tr>
+                            <td>{{ data.patient.full_name }}</td>
+                            <td>{{ data.patient.email }}</td>
+                            <td>{{ data.patient.phone or 'N/A' }}</td>
+                            <td>
+                                {% if data.latest_prediction %}
+                                    {{ data.latest_prediction.prediction }}
+                                {% else %}
+                                    No predictions yet
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data.latest_prediction %}
+                                    <span class="badge {% if data.latest_prediction.status == 'YES' %}badge-danger{% else %}badge-success{% endif %}">
+                                        {{ data.latest_prediction.status }}
+                                    </span>
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if data.latest_prediction %}
+                                    {{ data.latest_prediction.created_at.strftime('%Y-%m-%d') }}
+                                {% else %}
+                                    N/A
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Recent Predictions -->
+        <div class="card">
+            <div class="card-header">
+                <h3>📊 Recent Activity</h3>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Patient</th>
+                            <th>Prediction</th>
+                            <th>Stage</th>
+                            <th>Confidence</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for prediction in recent_predictions %}
+                        <tr>
+                            <td>{{ prediction.user.full_name }}</td>
+                            <td>{{ prediction.prediction }}</td>
+                            <td>{{ prediction.stage or 'N/A' }}</td>
+                            <td>{{ "%.1f"|format(prediction.confidence * 100) }}%</td>
+                            <td>{{ prediction.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background-color: var(--success-color);
+            color: white;
+        }
+        
+        .badge-danger {
+            background-color: var(--danger-color);
+            color: white;
+        }
+    </style>
+</body>
+</html>
