@@ -632,7 +632,7 @@ label {
 
 .auth-container {
     position: relative;
-    z-index: 10;
+    z-index: 15;
     width: 100%;
     max-width: 520px;
     margin: 0 20px;
@@ -676,6 +676,8 @@ label {
     background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
     opacity: 0;
     transition: opacity 0.6s;
+    z-index: -1;
+    pointer-events: none;
 }
 
 .auth-card:hover::after {
@@ -722,8 +724,10 @@ label {
 .auth-form {
     margin-bottom: 40px;
     position: relative;
-    z-index: 15;
+    z-index: 20;
     pointer-events: auto;
+    display: block;
+    width: 100%;
 }
 
 .auth-form .form-control {
@@ -789,18 +793,33 @@ label {
     letter-spacing: 1px;
     margin-top: 20px;
     position: relative;
-    z-index: 15;
+    z-index: 25;
     pointer-events: auto;
     cursor: pointer;
-    border: none;
+    border: 2px solid #ff6b35;
     display: inline-block;
     text-decoration: none;
     transition: var(--transition);
+    background: linear-gradient(135deg, #ff6b35, #8b5cf6);
+    color: white;
+    border-radius: 15px;
+    overflow: visible;
+    box-shadow: 0 5px 20px rgba(255, 107, 53, 0.3);
 }
 
 .auth-form .btn:hover {
     transform: translateY(-4px);
     box-shadow: 0 15px 40px rgba(255, 107, 53, 0.5);
+}
+
+.auth-form .btn:active {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(255, 107, 53, 0.4);
+}
+
+.auth-form .btn:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(255, 107, 53, 0.3);
 }
 
 .auth-links {

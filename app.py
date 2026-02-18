@@ -125,19 +125,36 @@ def home():
 def register():
     form = RegistrationForm()
     if form.validate_on_submit():
+        # Check if user already exists
+        if User.query.filter_by(email=form.email.data).first():
+            flash('Email already registered. Please login.', 'error')
+            return redirect(url_for('login'))
+        
+        if User.query.filter_by(username=form.username.data).first():
+            flash('Username already taken. Please choose another.', 'error')
+            return render_template('register.html', form=form)
+        
         hashed_password = generate_password_hash(form.password.data)
         user = User(
             username=form.username.data,
             email=form.email.data,
             password_hash=hashed_password,
-            role=form.role.data,
             full_name=form.full_name.data,
-            phone=form.phone.data
+            phone=form.phone.data,
+            role=form.role.data
         )
         db.session.add(user)
         db.session.commit()
         flash('Registration successful! Please login.', 'success')
         return redirect(url_for('login'))
+    
+    # Debug: print form errors if validation fails
+    if form.errors:
+        print(f"Form errors: {form.errors}")
+        for field, errors in form.errors.items():
+            for error in errors:
+                flash(f'{field}: {error}', 'error')
+    
     return render_template('register.html', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
